@@ -9,7 +9,7 @@ Copyright (c) 2009 Brant Faircloth. All rights reserved.
 
 import pdb
 from Bio import SeqIO
-from p3 import primer
+from p3wrapr import primer
 
 
 def prettyPrint(output, start, primer3):
@@ -36,19 +36,24 @@ def design(record, output, start = 0, stop = 150, target = '50,30'):
     #pdb.set_trace()
     while stop < len(record.seq):
         seq_slice = str(record.seq[start:stop])
-        primer3 = primer.Primer3(sequence=seq_slice, target=target, name = 'dunno', mispriming=False)
-        primer3.params['PRIMER_PRODUCT_SIZE_RANGE']        = '80-130'
-        primer3.params['PRIMER_MIN_GC'] = 20
-        primer3.params['PRIMER_MAX_GC'] = 80
-        primer3.params['PRIMER_GC_CLAMP'] = 0
-        primer3.params['PRIMER_MIN_TM']                    = 52.   # deg C
-        primer3.params['PRIMER_MAX_TM']                    = 60.   # deg C
-        primer3.params['PRIMER_OPT_TM']                    = 56.   # deg C
-        primer3.params['PRIMER_MAX_END_STABILITY']         = 10.0  # delta G
-        primer3.params['PRIMER_NUM_RETURN']                = 2     # count
-        primer3.params['PRIMER_MAX_POLY_X']                = 4     # nt
+        primer3_settings = primer.Settings()
+        primer3_settings.basic()
+        # override some of the basic parameters
+        primer3_settings.params['PRIMER_PRODUCT_SIZE_RANGE']        = '80-130'
+        primer3_settings.params['PRIMER_MIN_GC'] = 20
+        primer3_settings.params['PRIMER_MAX_GC'] = 80
+        primer3_settings.params['PRIMER_GC_CLAMP'] = 0
+        primer3_settings.params['PRIMER_MIN_TM']                    = 52.   # deg C
+        primer3_settings.params['PRIMER_MAX_TM']                    = 60.   # deg C
+        primer3_settings.params['PRIMER_OPT_TM']                    = 56.   # deg C
+        primer3_settings.params['PRIMER_MAX_END_STABILITY']         = 10.0  # delta G
+        primer3_settings.params['PRIMER_NUM_RETURN']                = 2     # count
+        primer3_settings.params['PRIMER_MAX_POLY_X']                = 4     # nt
+        primer3 = primer.Primers()
+        primer3.pick(primer3_settings, sequence=seq_slice, target=target, name = 'dunno')
+        #pdb.set_trace()
         # move through sequence iteratively designing primers
-        primer3.design()
+        #primer3.design()
         if 0 in primer3.primers.keys():
             #pdb.set_trace()
             prettyPrint(output, start, primer3)
@@ -71,7 +76,7 @@ def design(record, output, start = 0, stop = 150, target = '50,30'):
         #pdb.set_trace()
 
 def main():
-    output = open('primersDesignedForDog.txt','w')
+    output = open('primersDesigned.txt','w')
     count = 0
     # read the sequence
     for record in SeqIO.parse(open('dog_mtdna_entire.fasta', 'r'), 'fasta'):
